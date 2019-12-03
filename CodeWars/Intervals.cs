@@ -6,37 +6,21 @@ using Interval = System.ValueTuple<int, int>;
 public class Intervals {
 	public static int SumIntervals((int, int)[] intervals) {
 		int sum = 0;
-		List<(int, int)> list = new List<(int, int)>(intervals);
+		List<(int, int)> trimmedIntervals = new List<(int, int)>();
 
-		sum = intervals.Sum(x => x.Item2 - x.Item1);
+		foreach ((int, int) pair in intervals) {
+			(int, int) trimmedPair = pair;
 
-		bool hasOverlap = true;
-
-		while (hasOverlap) {
-			List<(int, int)> newList = new List<(int, int)>();
-
-			for (int i = 0; i < list.Count; i++) {
-				(int, int) pair1 = list[i];
-
-				for(int j = 0; j < list.Count; j++) {
-					if (j == i)
-						continue;
-
-					(int, int) pair2 = list[j];
-
-					if (AreOverlapped(pair1, pair2)) {
-						newList.Add(MergePairs(pair1, pair2));
-					}
-				}
-
-				if(newList.Count < list.Count) {
-					list = newList;
-					continue;
+			foreach ((int, int) tracking in trimmedIntervals) {
+				if (AreOverlapped(pair, (tracking.Item1, tracking.Item2))) {
+					trimmedPair = TrimPair(tracking, pair);
 				}
 			}
 
-			hasOverlap = false;
+			trimmedIntervals.Add(trimmedPair);
 		}
+
+		sum = trimmedIntervals.Sum(x => x.Item2 - x.Item1);
 
 		return sum;
 	}
@@ -48,8 +32,20 @@ public class Intervals {
 		|| (pair2.Item1 >= pair1.Item1 && pair2.Item1 <= pair1.Item2)
 		|| (pair2.Item2 >= pair1.Item1 && pair2.Item2 <= pair1.Item2);
 	}
-	private static (int, int) MergePairs((int, int) pair1, (int, int) pair2) {
-		return (GetMinValue(pair1.Item1, pair2.Item1), GetMaxValue(pair1.Item2, pair2.Item2));
+
+	/// <summary>
+	/// Trim pair2 off any overlapping with pair1 and return
+	/// </summary>
+	/// <param name="pair1"></param>
+	/// <param name="pair2"></param>
+	/// <returns></returns>
+	private static (int, int) TrimPair((int, int) pair1, (int, int) pair2) {
+
+		if (pair2.Item1 < pair1.Item1 && pair2.Item2 < pair1.Item2)
+			return (pair2.Item1, pair1.Item1);
+
+		if(pair2.Item2 < pair1.Item1)
+			return (pair2.Item1, pair1.Item1);
 	}
 
 	private static int GetMinValue(int value1, int value2) {
