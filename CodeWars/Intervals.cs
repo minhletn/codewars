@@ -6,19 +6,26 @@ public class Intervals {
 		int sum = 0;
 		List<(int, int)> mergedIntervals = new List<(int, int)>();
 
-		foreach ((int, int) pair in intervals) {
-			List<(int, int)> trimmedPairs = new List<(int, int)>();
-			bool hasOverlapped = false;
+		bool sameSize = false;
 
-			foreach ((int, int) tracking in mergedIntervals) {
-				if (AreOverlapped(pair, (tracking.Item1, tracking.Item2)) || AreOverlapped((tracking.Item1, tracking.Item2), pair)) {
-					hasOverlapped = true;
+		while (!sameSize) {
+			foreach((int, int) pair in intervals) {
+				List<(int, int)> mergedPairs = new List<(int, int)>();
+				bool hasOverlapped = false;
 
-					trimmedPairs.Add(MergePair(tracking, pair));
+				foreach((int, int) tracking in mergedIntervals) {
+					if(AreOverlapped(pair, (tracking.Item1, tracking.Item2)) || AreOverlapped((tracking.Item1, tracking.Item2), pair)) {
+						hasOverlapped = true;
+
+						mergedPairs.Add(MergePair(tracking, pair));
+					}
 				}
+
+				mergedIntervals.AddRange(hasOverlapped ? mergedPairs : new List<(int, int)>() { pair });
 			}
 
-			mergedIntervals.AddRange(hasOverlapped ? trimmedPairs : new List<(int, int)>() { pair });
+			sameSize = intervals.Length == mergedIntervals.Count;
+			intervals = mergedIntervals.ToArray();
 		}
 
 		sum = mergedIntervals.Sum(x => x.Item2 - x.Item1);
